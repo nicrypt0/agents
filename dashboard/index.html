@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BigBro Agent Dashboard</title>
+<style>
+  :root {
+    --bg: #0f0f13;
+    --surface: #18181f;
+    --border: #2a2a35;
+    --accent: #6c63ff;
+    --green: #22c55e;
+    --yellow: #eab308;
+    --red: #ef4444;
+    --text: #e2e2e8;
+    --muted: #6b7280;
+    --font: 'Inter', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; line-height: 1.5; }
+  header { padding: 20px 28px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  header h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+  header h1 span { color: var(--accent); }
+  #last-updated { font-size: 12px; color: var(--muted); }
+  #refresh-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+  #refresh-btn:hover { border-color: var(--accent); }
+  main { padding: 24px 28px; display: grid; gap: 24px; }
+
+  /* Status bar */
+  #status-bar { display: flex; gap: 12px; flex-wrap: wrap; }
+  .stat-pill { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 18px; display: flex; flex-direction: column; gap: 2px; min-width: 140px; }
+  .stat-pill .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-pill .value { font-size: 22px; font-weight: 700; }
+  .stat-pill .value.green { color: var(--green); }
+  .stat-pill .value.yellow { color: var(--yellow); }
+  .stat-pill .value.red { color: var(--red); }
+
+  /* Section */
+  section { }
+  section h2 { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
+
+  /* Grid layouts */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  @media (max-width: 900px) { .grid-3 { grid-template-columns: 1fr 1fr; } .grid-2 { grid-template-columns: 1fr; } }
+  @media (max-width: 600px) { .grid-3 { grid-template-columns: 1fr; } }
+
+  /* Cards */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .card-title { font-weight: 600; font-size: 14px; }
+  .badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 600; }
+  .badge.green { background: rgba(34,197,94,0.15); color: var(--green); }
+  .badge.yellow { background: rgba(234,179,8,0.15); color: var(--yellow); }
+  .badge.red { background: rgba(239,68,68,0.15); color: var(--red); }
+  .badge.gray { background: rgba(107,114,128,0.15); color: var(--muted); }
+  .card-meta { font-size: 12px; color: var(--muted); }
+  .card-meta span { display: block; margin-bottom: 2px; }
+
+  /* Cron table */
+  .cron-table { width: 100%; border-collapse: collapse; }
+  .cron-table th { text-align: left; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; padding: 0 10px 8px 0; border-bottom: 1px solid var(--border); }
+  .cron-table td { padding: 10px 10px 10px 0; border-bottom: 1px solid rgba(42,42,53,0.5); font-size: 13px; vertical-align: top; }
+  .cron-table tr:last-child td { border-bottom: none; }
+  .cron-name { font-weight: 500; }
+  .cron-schedule { font-family: monospace; font-size: 11px; color: var(--muted); }
+
+  /* Log tail */
+  .log-tail { background: #0a0a0e; border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; font-family: monospace; font-size: 11px; color: #9ca3af; max-height: 100px; overflow-y: auto; margin-top: 8px; white-space: pre-wrap; word-break: break-all; }
+
+  /* Context freshness */
+  .freshness-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(42,42,53,0.5); }
+  .freshness-row:last-child { border-bottom: none; }
+  .freshness-name { font-weight: 500; }
+  .freshness-age { font-size: 12px; color: var(--muted); }
+
+  /* Loading */
+  .loading { color: var(--muted); font-size: 13px; padding: 20px 0; }
+  .error-msg { color: var(--red); font-size: 12px; padding: 8px 0; }
+
+  /* Dot indicator */
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .dot.green { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .dot.yellow { background: var(--yellow); }
+  .dot.red { background: var(--red); }
+  .dot.gray { background: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>👁️ <span>BigBro</span> Agent Dashboard</h1>
+  <div style="display:flex;align-items:center;gap:12px">
+    <span id="last-updated">Loading...</span>
+    <button id="refresh-btn" onclick="loadAll()">↻ Refresh</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- Status Bar -->
+  <div id="status-bar">
+    <div class="stat-pill"><span class="label">GuyBot</span><span id="s-guybot" class="value">–</span></div>
+    <div class="stat-pill"><span class="label">Cron Jobs</span><span id="s-crons" class="value">–</span></div>
+    <div class="stat-pill"><span class="label">ChromaDB</span><span id="s-chroma" class="value">–</span></div>
+    <div class="stat-pill"><span class="label">Context Age</span><span id="s-context" class="value">–</span></div>
+    <div class="stat-pill"><span class="label">Digest Age</span><span id="s-digest" class="value">–</span></div>
+  </div>
+
+  <!-- Agents -->
+  <section>
+    <h2>Agents</h2>
+    <div id="agents-grid" class="grid-3"><p class="loading">Loading agents...</p></div>
+  </section>
+
+  <!-- Cron Jobs -->
+  <section>
+    <h2>Cron Jobs</h2>
+    <div class="card">
+      <table class="cron-table" id="cron-table">
+        <thead><tr>
+          <th>Name</th><th>Schedule</th><th>Last Run</th><th>Status</th><th>Next Run</th>
+        </tr></thead>
+        <tbody id="cron-body"><tr><td colspan="5" class="loading">Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ChromaDB + Context side by side -->
+  <div class="grid-2">
+    <section>
+      <h2>ChromaDB</h2>
+      <div id="chroma-card" class="card"><p class="loading">Loading...</p></div>
+    </section>
+    <section>
+      <h2>Market Context</h2>
+      <div id="context-card" class="card"><p class="loading">Loading...</p></div>
+    </section>
+  </div>
+
+</main>
+
+<script>
+const API = 'http://localhost:8000'; // replace with tunnel URL when deployed
+
+function badge(status) {
+  if (!status) return `<span class="badge gray">unknown</span>`;
+  const s = status.toLowerCase();
+  if (s === 'ok' || s === 'running') return `<span class="badge green">${status}</span>`;
+  if (s === 'error') return `<span class="badge red">${status}</span>`;
+  if (s === 'never') return `<span class="badge gray">never</span>`;
+  return `<span class="badge yellow">${status}</span>`;
+}
+
+function dot(alive) {
+  return `<span class="dot ${alive ? 'green' : 'gray'}"></span>`;
+}
+
+function ageColor(minutes) {
+  if (!minutes) return 'green';
+  if (minutes < 120) return 'green';
+  if (minutes < 360) return 'yellow';
+  return 'red';
+}
+
+async function fetchJSON(path) {
+  try {
+    const r = await fetch(API + path);
+    return await r.json();
+  } catch(e) {
+    return null;
+  }
+}
+
+async function loadStatus() {
+  const d = await fetchJSON('/status');
+  if (!d) return;
+  const g = document.getElementById('s-guybot');
+  g.textContent = d.guybot_running ? '🟢 Live' : '🔴 Down';
+  g.className = 'value ' + (d.guybot_running ? 'green' : 'red');
+  const c = document.getElementById('s-crons');
+  c.textContent = d.enabled_cron_jobs + ' active';
+  c.className = 'value ' + (d.cron_jobs_healthy ? 'green' : 'yellow');
+  const ch = document.getElementById('s-chroma');
+  ch.textContent = d.chroma_available ? '✓ Ready' : '✗ Down';
+  ch.className = 'value ' + (d.chroma_available ? 'green' : 'red');
+  document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+}
+
+async function loadContext() {
+  const d = await fetchJSON('/context');
+  if (!d) { document.getElementById('context-card').innerHTML = '<p class="error-msg">Failed to load</p>'; return; }
+
+  // Status bar
+  const ctxAge = d.current_md?.age_minutes;
+  const digestAge = d.latest_digest?.age_minutes;
+  const ca = document.getElementById('s-context');
+  ca.textContent = ctxAge ? d.current_md.age_label : '–';
+  ca.className = 'value ' + ageColor(ctxAge);
+  const da = document.getElementById('s-digest');
+  da.textContent = digestAge ? d.latest_digest.age_label : '–';
+  da.className = 'value ' + ageColor(digestAge);
+
+  const files = [
+    { label: 'current.md', data: d.current_md },
+    { label: 'weekly_context.md', data: d.weekly_context },
+    { label: 'latest_digest.txt', data: d.latest_digest },
+  ];
+  const rows = files.map(f => {
+    const age = f.data?.age_label || 'missing';
+    const color = f.data ? ageColor(f.data.age_minutes) : 'red';
+    return `<div class="freshness-row">
+      <span class="freshness-name">${f.label}</span>
+      <span class="freshness-age" style="color:var(--${color})">${age}</span>
+    </div>`;
+  }).join('');
+  document.getElementById('context-card').innerHTML = rows;
+}
+
+async function loadChroma() {
+  const d = await fetchJSON('/chroma');
+  const el = document.getElementById('chroma-card');
+  if (!d || !d.available) { el.innerHTML = '<p class="error-msg">ChromaDB unavailable</p>'; return; }
+  const cols = d.collections || {};
+  const rows = Object.entries(cols).map(([name, count]) =>
+    `<div class="freshness-row"><span class="freshness-name">${name}</span><span class="freshness-age">${count.toLocaleString()} entries</span></div>`
+  ).join('');
+  el.innerHTML = rows + `<div style="margin-top:10px;font-size:12px;color:var(--muted)">Total: ${(d.total||0).toLocaleString()} entries</div>`;
+}
+
+async function loadAgents() {
+  const d = await fetchJSON('/agents');
+  const el = document.getElementById('agents-grid');
+  if (!d) { el.innerHTML = '<p class="error-msg">Failed to load agents</p>'; return; }
+  const agents = d.agents || [];
+  el.innerHTML = agents.map(a => {
+    const isRunning = a.running;
+    const statusBadge = a.type === 'long-running'
+      ? badge(isRunning ? 'running' : 'stopped')
+      : badge(a.cron?.last_run_status || 'never');
+    const lastRun = a.cron?.last_run_age || (a.log_file?.age_label ? a.log_file.age_label : '–');
+    const logLines = a.log_file?.tail?.slice(-3).join('\n') || '';
+    const logHtml = logLines ? `<div class="log-tail">${logLines.replace(/</g,'&lt;')}</div>` : '';
+    return `<div class="card">
+      <div class="card-header">
+        <span class="card-title">${dot(isRunning || a.type === 'cron')}${a.name}</span>
+        ${statusBadge}
+      </div>
+      <div class="card-meta">
+        <span>Type: ${a.type}</span>
+        <span>Last activity: ${lastRun}</span>
+        ${a.pid ? `<span>PID: ${a.pid}</span>` : ''}
+      </div>
+      ${logHtml}
+    </div>`;
+  }).join('');
+}
+
+async function loadCrons() {
+  const d = await fetchJSON('/crons');
+  const tbody = document.getElementById('cron-body');
+  if (!d) { tbody.innerHTML = '<tr><td colspan="5" class="error-msg">Failed to load</td></tr>'; return; }
+  const jobs = d.jobs || [];
+  tbody.innerHTML = jobs.map(j => `<tr>
+    <td><span class="cron-name">${j.name}</span><br><span class="cron-schedule">${j.schedule_expr} ${j.timezone}</span></td>
+    <td>${j.last_run_age || '–'}</td>
+    <td>${badge(j.last_run_status || 'never')}</td>
+    <td style="color:var(--muted);font-size:12px">${j.next_run_at ? new Date(j.next_run_at).toLocaleString('en-GB',{timeZone:'Asia/Dubai',hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short'}) : '–'}</td>
+  </tr>`).join('');
+}
+
+async function loadAll() {
+  await Promise.all([loadStatus(), loadAgents(), loadCrons(), loadChroma(), loadContext()]);
+}
+
+loadAll();
+setInterval(loadAll, 30000);
+</script>
+</body>
+</html>
