@@ -248,31 +248,61 @@
 <!-- ══════════════════════════════ DATABASE PAGE ════════════════════════════ -->
 <div class="page" id="page-db">
   <div class="page-title">Database Explorer</div>
-  <div class="card">
-    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-      <button class="tab-btn active" onclick="switchTab('tweets')" id="tab-tweets">📡 Tweets</button>
-      <button class="tab-btn" onclick="switchTab('articles')" id="tab-articles">📰 Articles</button>
-      <button class="tab-btn" onclick="switchTab('my_tweets')" id="tab-my_tweets">👤 My Tweets</button>
+
+  <!-- Tweet Search -->
+  <section>
+    <h2>Tweet Search</h2>
+    <div class="card">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <input id="ts-query" type="text" placeholder='Search all tweets, e.g. "private credit" or "bitcoin ETF"...' style="flex:1;min-width:200px;background:#0a0a0e;border:1px solid var(--border);color:var(--text);padding:9px 14px;border-radius:6px;font-size:13px" onkeydown="if(event.key==='Enter')runTweetSearch()">
+        <select id="ts-collection" style="background:#0a0a0e;border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:6px;font-size:13px">
+          <option value="tweets">📡 Tweets (41 accounts)</option>
+          <option value="my_tweets">👤 My Tweets</option>
+          <option value="articles">📰 Articles</option>
+        </select>
+        <select id="ts-days" style="background:#0a0a0e;border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:6px;font-size:13px">
+          <option value="">All time</option>
+          <option value="7" selected>Last 7 days</option>
+          <option value="14">Last 14 days</option>
+          <option value="30">Last 30 days</option>
+        </select>
+        <button onclick="runTweetSearch()" style="background:var(--accent);border:none;color:#fff;padding:9px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600">Search</button>
+      </div>
+      <div id="ts-results" style="margin-top:14px"></div>
     </div>
-    <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
-      <input id="db-search" type="text" placeholder="Search tweets..." style="flex:1;min-width:160px;background:#0a0a0e;border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:6px;font-size:13px" onkeydown="if(event.key==='Enter')loadDB()">
-      <input id="db-handle" type="text" placeholder="@handle filter" style="width:140px;background:#0a0a0e;border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:6px;font-size:13px">
-      <select id="db-days" style="background:#0a0a0e;border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:6px;font-size:13px">
-        <option value="">All time</option>
-        <option value="1">Last 24h</option>
-        <option value="7" selected>Last 7 days</option>
-        <option value="14">Last 14 days</option>
-        <option value="30">Last 30 days</option>
-      </select>
-      <select id="db-sort" style="background:#0a0a0e;border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:6px;font-size:13px">
-        <option value="likes">Sort: Likes</option>
-        <option value="date">Sort: Date</option>
-      </select>
-      <button onclick="loadDB()" style="background:var(--accent);border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-size:13px">Search</button>
+  </section>
+
+  <!-- Divider -->
+  <div style="border-top:1px solid var(--border);margin:8px 0 20px"></div>
+
+  <!-- Browse Collections -->
+  <section>
+    <h2>Browse Collections</h2>
+    <div class="card">
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+        <button class="tab-btn active" onclick="switchTab('tweets')" id="tab-tweets">📡 Tweets</button>
+        <button class="tab-btn" onclick="switchTab('articles')" id="tab-articles">📰 Articles</button>
+        <button class="tab-btn" onclick="switchTab('my_tweets')" id="tab-my_tweets">👤 My Tweets</button>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <input id="db-handle" type="text" placeholder="@handle filter" style="width:140px;background:#0a0a0e;border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:6px;font-size:13px">
+        <select id="db-days" style="background:#0a0a0e;border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:6px;font-size:13px">
+          <option value="">All time</option>
+          <option value="1">Last 24h</option>
+          <option value="7" selected>Last 7 days</option>
+          <option value="14">Last 14 days</option>
+          <option value="30">Last 30 days</option>
+        </select>
+        <select id="db-sort" style="background:#0a0a0e;border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:6px;font-size:13px">
+          <option value="likes">Sort: Likes</option>
+          <option value="date">Sort: Date</option>
+        </select>
+        <button onclick="loadDB()" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:7px 16px;border-radius:6px;cursor:pointer;font-size:13px">Browse</button>
+      </div>
+      <div id="db-results"><p class="loading">Select a collection tab to browse...</p></div>
+      <div id="db-pagination" style="margin-top:12px;text-align:center"></div>
     </div>
-    <div id="db-results"><p class="loading">Select a tab to browse...</p></div>
-    <div id="db-pagination" style="margin-top:12px;text-align:center"></div>
-  </div>
+  </section>
 </div>
 
 <script>
@@ -525,6 +555,42 @@ async function loadActivityFull(append=false) {
   }
 }
 
+// ── Tweet Search (Phase 6) ────────────────────────────────────────────────────
+async function runTweetSearch() {
+  const q = document.getElementById('ts-query').value.trim();
+  const collection = document.getElementById('ts-collection').value;
+  const days = document.getElementById('ts-days').value;
+  const el = document.getElementById('ts-results');
+  if (!q) { el.innerHTML = '<p class="loading">Enter a search query above.</p>'; return; }
+  el.innerHTML = '<p class="loading">Searching...</p>';
+
+  let url = `/db/search?q=${encodeURIComponent(q)}&collection=${collection}&limit=20`;
+  if (days) url += `&days=${days}`;
+  const data = await fetchJSON(url);
+
+  if (!data || data.error) { el.innerHTML = `<p class="error-msg">${data?.error || 'Search failed'}</p>`; return; }
+  const items = data.items || [];
+  if (!items.length) { el.innerHTML = '<p class="loading">No results found.</p>'; return; }
+
+  el.innerHTML = `<div style="font-size:12px;color:var(--muted);margin-bottom:10px">${items.length} results for "<strong style="color:var(--text)">${q}</strong>" in ${collection}</div>` +
+    items.map((item, i) => {
+      const text = (item.text || '').replace(/</g,'&lt;').substring(0, 300);
+      const ellipsis = (item.text || '').length > 300 ? '...' : '';
+      const aiTag = item.ai_assisted ? '<span class="ai-badge">AI</span>' : '';
+      const likesHtml = item.likes ? `<span class="tweet-likes">♥ ${item.likes.toLocaleString()}</span>` : '';
+      const urlHtml = item.url ? `<a href="${item.url}" target="_blank">↗ Open</a>` : '';
+      const scoreHtml = item.score !== undefined ? `<span style="color:var(--accent)">relevance: ${item.score}</span>` : '';
+      return `<div class="tweet-row">
+        <span class="tweet-rank">${i+1}</span>
+        <div class="tweet-body">
+          <div><span class="tweet-handle">@${item.handle}</span> ${aiTag}</div>
+          <div class="tweet-text">${text}${ellipsis}</div>
+          <div class="tweet-meta">${likesHtml}<span>${item.date||''}</span>${urlHtml}${scoreHtml}</div>
+        </div>
+      </div>`;
+    }).join('');
+}
+
 // ── DB Explorer ───────────────────────────────────────────────────────────────
 let dbCurrentTab = 'tweets';
 let dbOffset = 0;
@@ -536,13 +602,13 @@ function switchTab(tab) {
   ['tweets','articles','my_tweets'].forEach(t => {
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
   });
-  document.getElementById('db-search').placeholder = tab === 'articles' ? 'Search articles...' : 'Search tweets...';
+
   document.getElementById('db-days').value = (tab === 'my_tweets' || tab === 'articles') ? '' : '7';
   loadDB();
 }
 
 async function loadDB(append=false) {
-  const q = document.getElementById('db-search').value.trim();
+  const q = '';  // browse mode — use Tweet Search above for keyword queries
   const handle = document.getElementById('db-handle').value.trim().replace('@','');
   const days = document.getElementById('db-days').value;
   const sort = document.getElementById('db-sort').value;
