@@ -49,6 +49,11 @@ CRON_AGENTS = [
 
 app = FastAPI(title="OpenClaw Agent Status Dashboard", version="1.0.0")
 
+@app.get("/", include_in_schema=False)
+async def serve_dashboard():
+    from fastapi.responses import FileResponse
+    return FileResponse(Path(__file__).parent / "index.html")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

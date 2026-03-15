@@ -193,19 +193,20 @@ async function loadContext() {
   if (!d) { document.getElementById('context-card').innerHTML = '<p class="error-msg">Failed to load</p>'; return; }
 
   // Status bar
-  const ctxAge = d.current_md?.age_minutes;
-  const digestAge = d.latest_digest?.age_minutes;
+  const f = d.files || {};
+  const ctxAge = f['current.md']?.age_minutes;
+  const digestAge = f['latest_digest.txt']?.age_minutes;
   const ca = document.getElementById('s-context');
-  ca.textContent = ctxAge ? d.current_md.age_label : '–';
+  ca.textContent = ctxAge ? f['current.md'].age_label : '–';
   ca.className = 'value ' + ageColor(ctxAge);
   const da = document.getElementById('s-digest');
-  da.textContent = digestAge ? d.latest_digest.age_label : '–';
+  da.textContent = digestAge ? f['latest_digest.txt'].age_label : '–';
   da.className = 'value ' + ageColor(digestAge);
 
   const files = [
-    { label: 'current.md', data: d.current_md },
-    { label: 'weekly_context.md', data: d.weekly_context },
-    { label: 'latest_digest.txt', data: d.latest_digest },
+    { label: 'current.md', data: f['current.md'] },
+    { label: 'weekly_context.md', data: f['weekly_context.md'] },
+    { label: 'latest_digest.txt', data: f['latest_digest.txt'] },
   ];
   const rows = files.map(f => {
     const age = f.data?.age_label || 'missing';
@@ -221,12 +222,14 @@ async function loadContext() {
 async function loadChroma() {
   const d = await fetchJSON('/chroma');
   const el = document.getElementById('chroma-card');
-  if (!d || !d.available) { el.innerHTML = '<p class="error-msg">ChromaDB unavailable</p>'; return; }
+  if (!d || d.error) { el.innerHTML = '<p class="error-msg">ChromaDB unavailable</p>'; return; }
   const cols = d.collections || {};
-  const rows = Object.entries(cols).map(([name, count]) =>
-    `<div class="freshness-row"><span class="freshness-name">${name}</span><span class="freshness-age">${count.toLocaleString()} entries</span></div>`
-  ).join('');
-  el.innerHTML = rows + `<div style="margin-top:10px;font-size:12px;color:var(--muted)">Total: ${(d.total||0).toLocaleString()} entries</div>`;
+  const rows = Object.entries(cols).map(([name, info]) => {
+    const count = typeof info === 'object' ? info.count : info;
+    return `<div class="freshness-row"><span class="freshness-name">${name}</span><span class="freshness-age">${(count||0).toLocaleString()} entries</span></div>`;
+  }).join('');
+  const total = Object.values(cols).reduce((s, v) => s + (typeof v === 'object' ? v.count : v), 0);
+  el.innerHTML = rows + `<div style="margin-top:10px;font-size:12px;color:var(--muted)">Total: ${total.toLocaleString()} entries</div>`;
 }
 
 async function loadAgents() {
