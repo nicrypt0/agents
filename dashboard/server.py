@@ -251,6 +251,18 @@ def get_agents() -> dict:
         }
     )
 
+    # --- Build activity_feed last-seen index ---
+    activity_last: dict[str, dict] = {}
+    if ACTIVITY_FEED_FILE.exists():
+        try:
+            feed_events = json.loads(ACTIVITY_FEED_FILE.read_text())
+            for ev in feed_events:
+                agent_key = ev.get("agent", "")
+                if agent_key not in activity_last:
+                    activity_last[agent_key] = ev  # feed is newest-first
+        except Exception:
+            pass
+
     # --- Cron-based agents ---
     cron_data = _read_json(CRON_JOBS_FILE)
     cron_map: dict[str, dict] = {}
@@ -288,6 +300,20 @@ def get_agents() -> dict:
         if last_run_ms:
             last_run_age = _age_label(_age_minutes(last_run_ms / 1000))
 
+        # Augment with activity feed last-seen (more reliable than cron state for script-run agents)
+        activity_ev = activity_last.get(agent_name)
+        activity_ts = activity_ev.get("ts") if activity_ev else None
+        activity_summary = activity_ev.get("summary") if activity_ev else None
+        activity_age: Optional[str] = None
+        if activity_ts:
+            try:
+                from datetime import datetime as _dt
+                ev_dt = _dt.fromisoformat(activity_ts.replace("Z", "+00:00"))
+                age_mins = (datetime.now(timezone.utc) - ev_dt).total_seconds() / 60
+                activity_age = _age_label(age_mins)
+            except Exception:
+                pass
+
         agents_out.append(
             {
                 "name": agent_name,
@@ -303,6 +329,11 @@ def get_agents() -> dict:
                 }
                 if job
                 else None,
+                "activity": {
+                    "last_seen_at": activity_ts,
+                    "last_seen_age": activity_age,
+                    "last_summary": activity_summary,
+                } if activity_ev else None,
                 "output_files": output_files,
                 "state": state_info,
                 "log_tail": log_tail_out,

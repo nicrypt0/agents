@@ -309,8 +309,9 @@ async function loadAgents() {
     const isRunning = a.running;
     const statusBadge = a.type === 'long-running'
       ? badge(isRunning ? 'running' : 'stopped')
-      : badge(a.cron?.last_run_status || 'never');
-    const lastRun = a.cron?.last_run_age || (a.log_file?.age_label ? a.log_file.age_label : '–');
+      : badge(a.activity ? 'ok' : (a.cron?.last_run_status || 'never'));
+    const lastRun = a.activity?.last_seen_age || a.cron?.last_run_age || (a.log_file?.age_label ? a.log_file.age_label : '–');
+    const lastSummary = a.activity?.last_summary || '';
     const logLines = a.log_file?.tail?.slice(-3).join('\n') || '';
     const logHtml = logLines ? `<div class="log-tail">${logLines.replace(/</g,'&lt;')}</div>` : '';
     return `<div class="card">
@@ -320,9 +321,10 @@ async function loadAgents() {
       </div>
       <div class="card-meta">
         <span>Type: ${a.type}</span>
-        <span>Last activity: ${lastRun}</span>
+        <span>Last run: ${lastRun}</span>
         ${a.pid ? `<span>PID: ${a.pid}</span>` : ''}
       </div>
+      ${lastSummary ? `<div style="font-size:12px;color:var(--muted);margin-top:6px;font-style:italic">${lastSummary}</div>` : ''}
       ${logHtml}
     </div>`;
   }).join('');
