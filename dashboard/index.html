@@ -341,6 +341,12 @@ function switchTab(tab) {
   });
   // Update search placeholder
   document.getElementById('db-search').placeholder = tab === 'articles' ? 'Search articles...' : 'Search tweets...';
+  // Default my_tweets and articles to all-time (not 7 days)
+  if (tab === 'my_tweets' || tab === 'articles') {
+    document.getElementById('db-days').value = '';
+  } else {
+    document.getElementById('db-days').value = '7';
+  }
   loadDB();
 }
 
