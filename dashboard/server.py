@@ -477,6 +477,59 @@ def get_activity(limit: int = 50) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Endpoint: /db/search  — keyword search (MUST be before /db/{collection})
+# ---------------------------------------------------------------------------
+
+@app.get("/db/search")
+def search_collection(
+    q: str,
+    collection: str = "tweets",
+    days: Optional[int] = None,
+    limit: int = 20,
+) -> dict:
+    """Semantic keyword search across a ChromaDB collection."""
+    try:
+        import sys as _sys
+        _sys.path.insert(0, str(MARKET_CONTEXT_DIR))
+        import chromadb
+        from datetime import timedelta
+
+        client = chromadb.PersistentClient(path=str(CHROMA_STORE_DIR))
+        existing = {c.name for c in client.list_collections()}
+        if collection not in existing:
+            return {"error": f"Collection '{collection}' not found", "items": []}
+
+        col = client.get_collection(collection)
+        if col.count() == 0:
+            return {"items": [], "total": 0}
+
+        where = None
+        if days:
+            cutoff_ts = int((datetime.now(timezone.utc) - timedelta(days=days)).timestamp())
+            where = {"date_ts": {"$gte": cutoff_ts}}
+
+        kwargs = {"query_texts": [q], "n_results": min(limit, col.count()), "include": ["metadatas", "documents", "distances"]}
+        if where:
+            kwargs["where"] = where
+
+        result = col.query(**kwargs)
+        items = []
+        for doc, meta, dist in zip(result["documents"][0], result["metadatas"][0], result["distances"][0]):
+            items.append({
+                "handle": meta.get("handle", meta.get("outlet", "?")),
+                "text": doc,
+                "likes": meta.get("likes", 0),
+                "url": meta.get("url", ""),
+                "date": meta.get("date_iso", ""),
+                "score": round(1 - dist, 3),
+            })
+        return {"items": items, "total": len(items), "query": q, "collection": collection}
+
+    except Exception as exc:
+        return {"error": str(exc), "items": []}
+
+
+# ---------------------------------------------------------------------------
 # Endpoint: /db/{collection}  — browse ChromaDB entries
 # ---------------------------------------------------------------------------
 
@@ -540,59 +593,6 @@ def browse_collection(
 
     except Exception as exc:
         return {"error": str(exc), "items": [], "total": 0}
-
-
-# ---------------------------------------------------------------------------
-# Endpoint: /db/search  — keyword search across a collection
-# ---------------------------------------------------------------------------
-
-@app.get("/db/search")
-def search_collection(
-    q: str,
-    collection: str = "tweets",
-    days: Optional[int] = None,
-    limit: int = 20,
-) -> dict:
-    """Semantic keyword search across a ChromaDB collection."""
-    try:
-        import sys as _sys
-        _sys.path.insert(0, str(MARKET_CONTEXT_DIR))
-        import chromadb
-        from datetime import timedelta
-
-        client = chromadb.PersistentClient(path=str(CHROMA_STORE_DIR))
-        existing = {c.name for c in client.list_collections()}
-        if collection not in existing:
-            return {"error": f"Collection '{collection}' not found", "items": []}
-
-        col = client.get_collection(collection)
-        if col.count() == 0:
-            return {"items": [], "total": 0}
-
-        where = None
-        if days:
-            cutoff_ts = int((datetime.now(timezone.utc) - timedelta(days=days)).timestamp())
-            where = {"date_ts": {"$gte": cutoff_ts}}
-
-        kwargs = {"query_texts": [q], "n_results": min(limit, col.count()), "include": ["metadatas", "documents", "distances"]}
-        if where:
-            kwargs["where"] = where
-
-        result = col.query(**kwargs)
-        items = []
-        for doc, meta, dist in zip(result["documents"][0], result["metadatas"][0], result["distances"][0]):
-            items.append({
-                "handle": meta.get("handle", meta.get("outlet", "?")),
-                "text": doc,
-                "likes": meta.get("likes", 0),
-                "url": meta.get("url", ""),
-                "date": meta.get("date_iso", ""),
-                "score": round(1 - dist, 3),
-            })
-        return {"items": items, "total": len(items), "query": q, "collection": collection}
-
-    except Exception as exc:
-        return {"error": str(exc), "items": []}
 
 
 # ---------------------------------------------------------------------------
