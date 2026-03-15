@@ -401,6 +401,125 @@ def get_context() -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Endpoint: /db/{collection}  — browse ChromaDB entries
+# ---------------------------------------------------------------------------
+
+@app.get("/db/{collection}")
+def browse_collection(
+    collection: str,
+    limit: int = 50,
+    offset: int = 0,
+    handle: Optional[str] = None,
+    days: Optional[int] = None,
+    sort: str = "likes",
+) -> dict:
+    """Browse entries in a ChromaDB collection with optional filters."""
+    try:
+        import sys as _sys
+        _sys.path.insert(0, str(MARKET_CONTEXT_DIR))
+        import chromadb
+        from datetime import timedelta
+
+        client = chromadb.PersistentClient(path=str(CHROMA_STORE_DIR))
+        existing = {c.name for c in client.list_collections()}
+        if collection not in existing:
+            return {"error": f"Collection '{collection}' not found", "items": [], "total": 0}
+
+        col = client.get_collection(collection)
+        total = col.count()
+        if total == 0:
+            return {"items": [], "total": 0, "collection": collection}
+
+        # Fetch all (up to 10k) then filter/sort in Python — simpler than ChromaDB where clauses
+        result = col.get(limit=min(total, 10000), include=["metadatas", "documents"])
+        items = []
+        now = datetime.now(timezone.utc)
+        cutoff_ts = None
+        if days:
+            cutoff_ts = int((now - timedelta(days=days)).timestamp())
+
+        for doc, meta in zip(result["documents"], result["metadatas"]):
+            if handle and meta.get("handle", "").lower() != handle.lower():
+                continue
+            if cutoff_ts and meta.get("date_ts", 0) < cutoff_ts:
+                continue
+            items.append({
+                "handle": meta.get("handle", meta.get("outlet", "?")),
+                "text": doc,
+                "likes": meta.get("likes", 0),
+                "url": meta.get("url", ""),
+                "date": meta.get("date_iso", ""),
+                "ai_assisted": meta.get("ai_assisted", False),
+            })
+
+        # Sort
+        if sort == "likes":
+            items.sort(key=lambda x: x["likes"], reverse=True)
+        else:
+            items.sort(key=lambda x: x["date"], reverse=True)
+
+        filtered_total = len(items)
+        page = items[offset:offset + limit]
+        return {"items": page, "total": filtered_total, "collection": collection, "offset": offset, "limit": limit}
+
+    except Exception as exc:
+        return {"error": str(exc), "items": [], "total": 0}
+
+
+# ---------------------------------------------------------------------------
+# Endpoint: /db/search  — keyword search across a collection
+# ---------------------------------------------------------------------------
+
+@app.get("/db/search")
+def search_collection(
+    q: str,
+    collection: str = "tweets",
+    days: Optional[int] = None,
+    limit: int = 20,
+) -> dict:
+    """Semantic keyword search across a ChromaDB collection."""
+    try:
+        import sys as _sys
+        _sys.path.insert(0, str(MARKET_CONTEXT_DIR))
+        import chromadb
+        from datetime import timedelta
+
+        client = chromadb.PersistentClient(path=str(CHROMA_STORE_DIR))
+        existing = {c.name for c in client.list_collections()}
+        if collection not in existing:
+            return {"error": f"Collection '{collection}' not found", "items": []}
+
+        col = client.get_collection(collection)
+        if col.count() == 0:
+            return {"items": [], "total": 0}
+
+        where = None
+        if days:
+            cutoff_ts = int((datetime.now(timezone.utc) - timedelta(days=days)).timestamp())
+            where = {"date_ts": {"$gte": cutoff_ts}}
+
+        kwargs = {"query_texts": [q], "n_results": min(limit, col.count()), "include": ["metadatas", "documents", "distances"]}
+        if where:
+            kwargs["where"] = where
+
+        result = col.query(**kwargs)
+        items = []
+        for doc, meta, dist in zip(result["documents"][0], result["metadatas"][0], result["distances"][0]):
+            items.append({
+                "handle": meta.get("handle", meta.get("outlet", "?")),
+                "text": doc,
+                "likes": meta.get("likes", 0),
+                "url": meta.get("url", ""),
+                "date": meta.get("date_iso", ""),
+                "score": round(1 - dist, 3),
+            })
+        return {"items": items, "total": len(items), "query": q, "collection": collection}
+
+    except Exception as exc:
+        return {"error": str(exc), "items": []}
+
+
+# ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
 

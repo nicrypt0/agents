@@ -75,6 +75,24 @@
   .freshness-name { font-weight: 500; }
   .freshness-age { font-size: 12px; color: var(--muted); }
 
+  /* Tab buttons */
+  .tab-btn { background: var(--surface); border: 1px solid var(--border); color: var(--muted); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; }
+  .tab-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(108,99,255,0.1); }
+  .tab-btn:hover { border-color: var(--accent); color: var(--text); }
+
+  /* Tweet rows */
+  .tweet-row { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(42,42,53,0.5); align-items: flex-start; }
+  .tweet-row:last-child { border-bottom: none; }
+  .tweet-rank { color: var(--muted); font-size: 12px; min-width: 24px; padding-top: 2px; }
+  .tweet-body { flex: 1; min-width: 0; }
+  .tweet-handle { font-weight: 600; font-size: 13px; color: var(--accent); }
+  .tweet-text { font-size: 13px; color: var(--text); margin: 3px 0; line-height: 1.4; word-break: break-word; }
+  .tweet-meta { font-size: 11px; color: var(--muted); display: flex; gap: 10px; flex-wrap: wrap; }
+  .tweet-meta a { color: var(--accent); text-decoration: none; }
+  .tweet-meta a:hover { text-decoration: underline; }
+  .tweet-likes { font-weight: 600; color: var(--green); }
+  .ai-badge { background: rgba(108,99,255,0.2); color: var(--accent); font-size: 10px; padding: 1px 6px; border-radius: 10px; }
+
   /* Loading */
   .loading { color: var(--muted); font-size: 13px; padding: 20px 0; }
   .error-msg { color: var(--red); font-size: 12px; padding: 8px 0; }
@@ -124,6 +142,39 @@
         </tr></thead>
         <tbody id="cron-body"><tr><td colspan="5" class="loading">Loading...</td></tr></tbody>
       </table>
+    </div>
+  </section>
+
+  <!-- DB Explorer -->
+  <section>
+    <h2>Database Explorer</h2>
+    <div class="card">
+      <!-- Tabs -->
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+        <button class="tab-btn active" onclick="switchTab('tweets')" id="tab-tweets">📡 Tweets</button>
+        <button class="tab-btn" onclick="switchTab('articles')" id="tab-articles">📰 Articles</button>
+        <button class="tab-btn" onclick="switchTab('my_tweets')" id="tab-my_tweets">👤 My Tweets</button>
+      </div>
+      <!-- Filters -->
+      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+        <input id="db-search" type="text" placeholder="Search tweets..." style="flex:1;min-width:160px;background:#0a0a0e;border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:6px;font-size:13px" onkeydown="if(event.key==='Enter')loadDB()">
+        <input id="db-handle" type="text" placeholder="@handle filter" style="width:140px;background:#0a0a0e;border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:6px;font-size:13px">
+        <select id="db-days" style="background:#0a0a0e;border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:6px;font-size:13px">
+          <option value="">All time</option>
+          <option value="1">Last 24h</option>
+          <option value="7" selected>Last 7 days</option>
+          <option value="14">Last 14 days</option>
+          <option value="30">Last 30 days</option>
+        </select>
+        <select id="db-sort" style="background:#0a0a0e;border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:6px;font-size:13px">
+          <option value="likes">Sort: Likes</option>
+          <option value="date">Sort: Date</option>
+        </select>
+        <button onclick="loadDB()" style="background:var(--accent);border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-size:13px">Search</button>
+      </div>
+      <!-- Results -->
+      <div id="db-results"><p class="loading">Select a tab to browse...</p></div>
+      <div id="db-pagination" style="margin-top:12px;text-align:center"></div>
     </div>
   </section>
 
@@ -276,6 +327,93 @@ async function loadCrons() {
 async function loadAll() {
   await Promise.all([loadStatus(), loadAgents(), loadCrons(), loadChroma(), loadContext()]);
 }
+
+// ── DB Explorer ──────────────────────────────────────────────────────────────
+let dbCurrentTab = 'tweets';
+let dbOffset = 0;
+const DB_LIMIT = 50;
+
+function switchTab(tab) {
+  dbCurrentTab = tab;
+  dbOffset = 0;
+  ['tweets','articles','my_tweets'].forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+  });
+  // Update search placeholder
+  document.getElementById('db-search').placeholder = tab === 'articles' ? 'Search articles...' : 'Search tweets...';
+  loadDB();
+}
+
+async function loadDB(append=false) {
+  const q = document.getElementById('db-search').value.trim();
+  const handle = document.getElementById('db-handle').value.trim().replace('@','');
+  const days = document.getElementById('db-days').value;
+  const sort = document.getElementById('db-sort').value;
+  const el = document.getElementById('db-results');
+  const pg = document.getElementById('db-pagination');
+
+  if (!append) { dbOffset = 0; el.innerHTML = '<p class="loading">Loading...</p>'; pg.innerHTML = ''; }
+
+  let data;
+  if (q) {
+    // Semantic search
+    let url = `${API}/db/search?q=${encodeURIComponent(q)}&collection=${dbCurrentTab}&limit=${DB_LIMIT}`;
+    if (days) url += `&days=${days}`;
+    data = await fetchJSON(url.replace(API, ''));
+  } else {
+    // Browse
+    let url = `/db/${dbCurrentTab}?limit=${DB_LIMIT}&offset=${dbOffset}&sort=${sort}`;
+    if (handle) url += `&handle=${encodeURIComponent(handle)}`;
+    if (days) url += `&days=${days}`;
+    data = await fetchJSON(url);
+  }
+
+  if (!data || data.error) {
+    el.innerHTML = `<p class="error-msg">${data?.error || 'Failed to load'}</p>`;
+    return;
+  }
+
+  const items = data.items || [];
+  if (items.length === 0 && !append) {
+    el.innerHTML = '<p class="loading">No results found.</p>';
+    return;
+  }
+
+  const rows = items.map((item, i) => {
+    const rank = dbOffset + i + 1;
+    const text = item.text ? item.text.replace(/</g,'&lt;').substring(0, 280) : '';
+    const ellipsis = item.text && item.text.length > 280 ? '...' : '';
+    const aiTag = item.ai_assisted ? '<span class="ai-badge">AI</span>' : '';
+    const likesHtml = item.likes ? `<span class="tweet-likes">♥ ${item.likes.toLocaleString()}</span>` : '';
+    const urlHtml = item.url ? `<a href="${item.url}" target="_blank">↗ Open</a>` : '';
+    const score = item.score !== undefined ? `<span>score: ${item.score}</span>` : '';
+    return `<div class="tweet-row">
+      <span class="tweet-rank">${rank}</span>
+      <div class="tweet-body">
+        <div><span class="tweet-handle">@${item.handle}</span> ${aiTag}</div>
+        <div class="tweet-text">${text}${ellipsis}</div>
+        <div class="tweet-meta">${likesHtml}<span>${item.date || ''}</span>${urlHtml}${score}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  if (append) {
+    el.innerHTML += rows;
+  } else {
+    el.innerHTML = `<div style="font-size:12px;color:var(--muted);margin-bottom:10px">${data.total.toLocaleString()} results${q ? ` for "${q}"` : ''}</div>` + rows;
+  }
+
+  // Pagination
+  dbOffset += items.length;
+  if (!q && dbOffset < (data.total || 0)) {
+    pg.innerHTML = `<button onclick="loadDB(true)" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:7px 20px;border-radius:6px;cursor:pointer;font-size:13px">Load more (${data.total - dbOffset} remaining)</button>`;
+  } else {
+    pg.innerHTML = '';
+  }
+}
+
+// Load tweets tab by default on page load
+window.addEventListener('DOMContentLoaded', () => { setTimeout(() => switchTab('tweets'), 500); });
 
 loadAll();
 setInterval(loadAll, 30000);
