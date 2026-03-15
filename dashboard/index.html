@@ -19,29 +19,44 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; line-height: 1.5; }
-  header { padding: 20px 28px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-  header h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+
+  /* Header */
+  header { padding: 16px 28px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .header-left { display: flex; align-items: center; gap: 20px; }
+  header h1 { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; white-space: nowrap; }
   header h1 span { color: var(--accent); }
+
+  /* Nav */
+  nav { display: flex; gap: 4px; }
+  .nav-btn { background: none; border: 1px solid transparent; color: var(--muted); padding: 5px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.15s; }
+  .nav-btn:hover { color: var(--text); border-color: var(--border); }
+  .nav-btn.active { color: var(--accent); border-color: var(--accent); background: rgba(108,99,255,0.1); }
+
+  /* Header right */
+  .header-right { display: flex; align-items: center; gap: 10px; }
   #last-updated { font-size: 12px; color: var(--muted); }
-  #refresh-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+  #refresh-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
   #refresh-btn:hover { border-color: var(--accent); }
-  main { padding: 24px 28px; display: grid; gap: 24px; }
+
+  /* Pages */
+  .page { display: none; padding: 24px 28px; }
+  .page.active { display: block; }
 
   /* Status bar */
-  #status-bar { display: flex; gap: 12px; flex-wrap: wrap; }
-  .stat-pill { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 18px; display: flex; flex-direction: column; gap: 2px; min-width: 140px; }
+  #status-bar { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+  .stat-pill { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 18px; display: flex; flex-direction: column; gap: 2px; min-width: 130px; }
   .stat-pill .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
-  .stat-pill .value { font-size: 22px; font-weight: 700; }
+  .stat-pill .value { font-size: 20px; font-weight: 700; }
   .stat-pill .value.green { color: var(--green); }
   .stat-pill .value.yellow { color: var(--yellow); }
   .stat-pill .value.red { color: var(--red); }
 
   /* Section */
-  section { }
-  section h2 { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
+  section { margin-bottom: 28px; }
+  section h2 { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
 
-  /* Grid layouts */
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  /* Grid */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
   @media (max-width: 900px) { .grid-3 { grid-template-columns: 1fr 1fr; } .grid-2 { grid-template-columns: 1fr; } }
   @media (max-width: 600px) { .grid-3 { grid-template-columns: 1fr; } }
@@ -60,8 +75,8 @@
 
   /* Cron table */
   .cron-table { width: 100%; border-collapse: collapse; }
-  .cron-table th { text-align: left; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; padding: 0 10px 8px 0; border-bottom: 1px solid var(--border); }
-  .cron-table td { padding: 10px 10px 10px 0; border-bottom: 1px solid rgba(42,42,53,0.5); font-size: 13px; vertical-align: top; }
+  .cron-table th { text-align: left; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; padding: 0 10px 10px 0; border-bottom: 1px solid var(--border); }
+  .cron-table td { padding: 11px 10px 11px 0; border-bottom: 1px solid rgba(42,42,53,0.5); font-size: 13px; vertical-align: top; }
   .cron-table tr:last-child td { border-bottom: none; }
   .cron-name { font-weight: 500; }
   .cron-schedule { font-family: monospace; font-size: 11px; color: var(--muted); }
@@ -76,7 +91,7 @@
   .freshness-age { font-size: 12px; color: var(--muted); }
 
   /* Activity feed */
-  .activity-item { display: flex; gap: 12px; padding: 9px 0; border-bottom: 1px solid rgba(42,42,53,0.5); align-items: flex-start; }
+  .activity-item { display: flex; gap: 12px; padding: 11px 0; border-bottom: 1px solid rgba(42,42,53,0.5); align-items: flex-start; }
   .activity-item:last-child { border-bottom: none; }
   .activity-icon { font-size: 16px; min-width: 22px; }
   .activity-body { flex: 1; }
@@ -92,7 +107,7 @@
   /* Tweet rows */
   .tweet-row { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(42,42,53,0.5); align-items: flex-start; }
   .tweet-row:last-child { border-bottom: none; }
-  .tweet-rank { color: var(--muted); font-size: 12px; min-width: 24px; padding-top: 2px; }
+  .tweet-rank { color: var(--muted); font-size: 12px; min-width: 28px; padding-top: 2px; }
   .tweet-body { flex: 1; min-width: 0; }
   .tweet-handle { font-weight: 600; font-size: 13px; color: var(--accent); }
   .tweet-text { font-size: 13px; color: var(--text); margin: 3px 0; line-height: 1.4; word-break: break-word; }
@@ -102,31 +117,41 @@
   .tweet-likes { font-weight: 600; color: var(--green); }
   .ai-badge { background: rgba(108,99,255,0.2); color: var(--accent); font-size: 10px; padding: 1px 6px; border-radius: 10px; }
 
-  /* Loading */
+  /* Loading/error */
   .loading { color: var(--muted); font-size: 13px; padding: 20px 0; }
   .error-msg { color: var(--red); font-size: 12px; padding: 8px 0; }
 
-  /* Dot indicator */
+  /* Dot */
   .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
   .dot.green { background: var(--green); box-shadow: 0 0 6px var(--green); }
-  .dot.yellow { background: var(--yellow); }
-  .dot.red { background: var(--red); }
   .dot.gray { background: var(--muted); }
+
+  /* Page title */
+  .page-title { font-size: 20px; font-weight: 700; margin-bottom: 20px; }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>👁️ <span>BigBro</span> Agent Dashboard</h1>
-  <div style="display:flex;align-items:center;gap:12px">
+  <div class="header-left">
+    <h1>👁️ <span>BigBro</span></h1>
+    <nav>
+      <button class="nav-btn active" onclick="navigate('home')" id="nav-home">Overview</button>
+      <button class="nav-btn" onclick="navigate('agents')" id="nav-agents">Agents</button>
+      <button class="nav-btn" onclick="navigate('crons')" id="nav-crons">Cron Jobs</button>
+      <button class="nav-btn" onclick="navigate('activity')" id="nav-activity">Activity</button>
+      <button class="nav-btn" onclick="navigate('db')" id="nav-db">Database</button>
+    </nav>
+  </div>
+  <div class="header-right">
     <span id="last-updated">Loading...</span>
-    <button id="refresh-btn" onclick="loadAll()">↻ Refresh</button>
+    <button id="refresh-btn" onclick="refreshCurrent()">↻ Refresh</button>
   </div>
 </header>
 
-<main>
+<!-- ═══════════════════════════════ HOME PAGE ═══════════════════════════════ -->
+<div class="page active" id="page-home">
 
-  <!-- Status Bar -->
   <div id="status-bar">
     <div class="stat-pill"><span class="label">GuyBot</span><span id="s-guybot" class="value">–</span></div>
     <div class="stat-pill"><span class="label">Cron Jobs</span><span id="s-crons" class="value">–</span></div>
@@ -135,67 +160,6 @@
     <div class="stat-pill"><span class="label">Digest Age</span><span id="s-digest" class="value">–</span></div>
   </div>
 
-  <!-- Agents -->
-  <section>
-    <h2>Agents</h2>
-    <div id="agents-grid" class="grid-3"><p class="loading">Loading agents...</p></div>
-  </section>
-
-  <!-- Cron Jobs -->
-  <section>
-    <h2>Cron Jobs</h2>
-    <div class="card">
-      <table class="cron-table" id="cron-table">
-        <thead><tr>
-          <th>Name</th><th>Schedule</th><th>Last Run</th><th>Status</th><th>Next Run</th>
-        </tr></thead>
-        <tbody id="cron-body"><tr><td colspan="5" class="loading">Loading...</td></tr></tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- Activity Feed -->
-  <section>
-    <h2>Agent Activity Feed</h2>
-    <div class="card" id="activity-feed" style="max-height:320px;overflow-y:auto">
-      <p class="loading">Loading activity...</p>
-    </div>
-  </section>
-
-  <!-- DB Explorer -->
-  <section>
-    <h2>Database Explorer</h2>
-    <div class="card">
-      <!-- Tabs -->
-      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-        <button class="tab-btn active" onclick="switchTab('tweets')" id="tab-tweets">📡 Tweets</button>
-        <button class="tab-btn" onclick="switchTab('articles')" id="tab-articles">📰 Articles</button>
-        <button class="tab-btn" onclick="switchTab('my_tweets')" id="tab-my_tweets">👤 My Tweets</button>
-      </div>
-      <!-- Filters -->
-      <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
-        <input id="db-search" type="text" placeholder="Search tweets..." style="flex:1;min-width:160px;background:#0a0a0e;border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:6px;font-size:13px" onkeydown="if(event.key==='Enter')loadDB()">
-        <input id="db-handle" type="text" placeholder="@handle filter" style="width:140px;background:#0a0a0e;border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:6px;font-size:13px">
-        <select id="db-days" style="background:#0a0a0e;border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:6px;font-size:13px">
-          <option value="">All time</option>
-          <option value="1">Last 24h</option>
-          <option value="7" selected>Last 7 days</option>
-          <option value="14">Last 14 days</option>
-          <option value="30">Last 30 days</option>
-        </select>
-        <select id="db-sort" style="background:#0a0a0e;border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:6px;font-size:13px">
-          <option value="likes">Sort: Likes</option>
-          <option value="date">Sort: Date</option>
-        </select>
-        <button onclick="loadDB()" style="background:var(--accent);border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-size:13px">Search</button>
-      </div>
-      <!-- Results -->
-      <div id="db-results"><p class="loading">Select a tab to browse...</p></div>
-      <div id="db-pagination" style="margin-top:12px;text-align:center"></div>
-    </div>
-  </section>
-
-  <!-- ChromaDB + Context side by side -->
   <div class="grid-2">
     <section>
       <h2>ChromaDB</h2>
@@ -207,11 +171,113 @@
     </section>
   </div>
 
-</main>
+  <section>
+    <h2>Recent Activity</h2>
+    <div class="card" id="activity-preview" style="max-height:260px;overflow-y:auto">
+      <p class="loading">Loading...</p>
+    </div>
+    <div style="margin-top:8px;text-align:right">
+      <button onclick="navigate('activity')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:12px">View all →</button>
+    </div>
+  </section>
+
+</div>
+
+<!-- ══════════════════════════════ AGENTS PAGE ══════════════════════════════ -->
+<div class="page" id="page-agents">
+  <div class="page-title">Agents</div>
+  <div id="agents-grid" class="grid-3"><p class="loading">Loading agents...</p></div>
+</div>
+
+<!-- ══════════════════════════════ CRONS PAGE ═══════════════════════════════ -->
+<div class="page" id="page-crons">
+  <div class="page-title">Cron Jobs</div>
+  <div class="card">
+    <table class="cron-table" id="cron-table">
+      <thead><tr>
+        <th>Name</th><th>Schedule</th><th>Last Run</th><th>Status</th><th>Next Run</th>
+      </tr></thead>
+      <tbody id="cron-body"><tr><td colspan="5" class="loading">Loading...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═════════════════════════════ ACTIVITY PAGE ═════════════════════════════ -->
+<div class="page" id="page-activity">
+  <div class="page-title">Agent Activity Feed</div>
+  <div class="card" id="activity-feed-full">
+    <p class="loading">Loading activity...</p>
+  </div>
+  <div id="activity-load-more" style="margin-top:12px;text-align:center"></div>
+</div>
+
+<!-- ══════════════════════════════ DATABASE PAGE ════════════════════════════ -->
+<div class="page" id="page-db">
+  <div class="page-title">Database Explorer</div>
+  <div class="card">
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      <button class="tab-btn active" onclick="switchTab('tweets')" id="tab-tweets">📡 Tweets</button>
+      <button class="tab-btn" onclick="switchTab('articles')" id="tab-articles">📰 Articles</button>
+      <button class="tab-btn" onclick="switchTab('my_tweets')" id="tab-my_tweets">👤 My Tweets</button>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+      <input id="db-search" type="text" placeholder="Search tweets..." style="flex:1;min-width:160px;background:#0a0a0e;border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:6px;font-size:13px" onkeydown="if(event.key==='Enter')loadDB()">
+      <input id="db-handle" type="text" placeholder="@handle filter" style="width:140px;background:#0a0a0e;border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:6px;font-size:13px">
+      <select id="db-days" style="background:#0a0a0e;border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:6px;font-size:13px">
+        <option value="">All time</option>
+        <option value="1">Last 24h</option>
+        <option value="7" selected>Last 7 days</option>
+        <option value="14">Last 14 days</option>
+        <option value="30">Last 30 days</option>
+      </select>
+      <select id="db-sort" style="background:#0a0a0e;border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:6px;font-size:13px">
+        <option value="likes">Sort: Likes</option>
+        <option value="date">Sort: Date</option>
+      </select>
+      <button onclick="loadDB()" style="background:var(--accent);border:none;color:#fff;padding:7px 16px;border-radius:6px;cursor:pointer;font-size:13px">Search</button>
+    </div>
+    <div id="db-results"><p class="loading">Select a tab to browse...</p></div>
+    <div id="db-pagination" style="margin-top:12px;text-align:center"></div>
+  </div>
+</div>
 
 <script>
-const API = 'http://localhost:8000'; // replace with tunnel URL when deployed
+const API = '';  // same origin
 
+// ── Router ───────────────────────────────────────────────────────────────────
+const PAGES = ['home','agents','crons','activity','db'];
+let currentPage = 'home';
+
+function navigate(page) {
+  PAGES.forEach(p => {
+    document.getElementById('page-' + p).classList.toggle('active', p === page);
+    document.getElementById('nav-' + p).classList.toggle('active', p === page);
+  });
+  currentPage = page;
+  window.location.hash = page === 'home' ? '' : page;
+  // Lazy load page content on first visit
+  if (page === 'agents') loadAgents();
+  if (page === 'crons') loadCrons();
+  if (page === 'activity') loadActivityFull();
+  if (page === 'db') { setTimeout(() => switchTab('tweets'), 100); }
+}
+
+function refreshCurrent() {
+  loadHome();
+  if (currentPage === 'agents') loadAgents();
+  if (currentPage === 'crons') loadCrons();
+  if (currentPage === 'activity') loadActivityFull();
+  document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+}
+
+// Handle hash on load
+window.addEventListener('DOMContentLoaded', () => {
+  const hash = window.location.hash.replace('#','').trim();
+  if (hash && PAGES.includes(hash)) navigate(hash);
+  else navigate('home');
+});
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
 function badge(status) {
   if (!status) return `<span class="badge gray">unknown</span>`;
   const s = status.toLowerCase();
@@ -220,25 +286,21 @@ function badge(status) {
   if (s === 'never') return `<span class="badge gray">never</span>`;
   return `<span class="badge yellow">${status}</span>`;
 }
-
-function dot(alive) {
-  return `<span class="dot ${alive ? 'green' : 'gray'}"></span>`;
-}
-
-function ageColor(minutes) {
-  if (!minutes) return 'green';
-  if (minutes < 120) return 'green';
-  if (minutes < 360) return 'yellow';
-  return 'red';
-}
+function dot(alive) { return `<span class="dot ${alive ? 'green' : 'gray'}"></span>`; }
+function ageColor(m) { if (!m) return 'green'; if (m < 120) return 'green'; if (m < 360) return 'yellow'; return 'red'; }
 
 async function fetchJSON(path) {
-  try {
-    const r = await fetch(API + path);
-    return await r.json();
-  } catch(e) {
-    return null;
-  }
+  try { const r = await fetch(path); return await r.json(); }
+  catch(e) { return null; }
+}
+
+function fmtTime(iso) {
+  return new Date(iso).toLocaleString('en-GB', {timeZone:'Asia/Dubai', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'});
+}
+
+// ── Home Page ────────────────────────────────────────────────────────────────
+async function loadHome() {
+  await Promise.all([loadStatus(), loadChroma(), loadContext(), loadActivityPreview()]);
 }
 
 async function loadStatus() {
@@ -259,8 +321,6 @@ async function loadStatus() {
 async function loadContext() {
   const d = await fetchJSON('/context');
   if (!d) { document.getElementById('context-card').innerHTML = '<p class="error-msg">Failed to load</p>'; return; }
-
-  // Status bar
   const f = d.files || {};
   const ctxAge = f['current.md']?.age_minutes;
   const digestAge = f['latest_digest.txt']?.age_minutes;
@@ -270,21 +330,16 @@ async function loadContext() {
   const da = document.getElementById('s-digest');
   da.textContent = digestAge ? f['latest_digest.txt'].age_label : '–';
   da.className = 'value ' + ageColor(digestAge);
-
   const files = [
     { label: 'current.md', data: f['current.md'] },
     { label: 'weekly_context.md', data: f['weekly_context.md'] },
     { label: 'latest_digest.txt', data: f['latest_digest.txt'] },
   ];
-  const rows = files.map(f => {
-    const age = f.data?.age_label || 'missing';
-    const color = f.data ? ageColor(f.data.age_minutes) : 'red';
-    return `<div class="freshness-row">
-      <span class="freshness-name">${f.label}</span>
-      <span class="freshness-age" style="color:var(--${color})">${age}</span>
-    </div>`;
+  document.getElementById('context-card').innerHTML = files.map(fi => {
+    const age = fi.data?.age_label || 'missing';
+    const color = fi.data ? ageColor(fi.data.age_minutes) : 'red';
+    return `<div class="freshness-row"><span class="freshness-name">${fi.label}</span><span class="freshness-age" style="color:var(--${color})">${age}</span></div>`;
   }).join('');
-  document.getElementById('context-card').innerHTML = rows;
 }
 
 async function loadChroma() {
@@ -300,20 +355,36 @@ async function loadChroma() {
   el.innerHTML = rows + `<div style="margin-top:10px;font-size:12px;color:var(--muted)">Total: ${total.toLocaleString()} entries</div>`;
 }
 
+function renderActivityItems(events) {
+  return events.map(e => `<div class="activity-item">
+    <span class="activity-icon">${e.icon || '⚙️'}</span>
+    <div class="activity-body">
+      <div class="activity-agent">${e.agent}</div>
+      <div class="activity-summary">${e.summary}</div>
+      <div class="activity-time">${fmtTime(e.ts)} Dubai</div>
+    </div>
+  </div>`).join('');
+}
+
+async function loadActivityPreview() {
+  const el = document.getElementById('activity-preview');
+  const data = await fetchJSON('/activity?limit=10');
+  if (!data || !data.events?.length) { el.innerHTML = '<p class="loading">No activity yet.</p>'; return; }
+  el.innerHTML = renderActivityItems(data.events);
+}
+
+// ── Agents Page ───────────────────────────────────────────────────────────────
 async function loadAgents() {
-  const d = await fetchJSON('/agents');
   const el = document.getElementById('agents-grid');
+  const d = await fetchJSON('/agents');
   if (!d) { el.innerHTML = '<p class="error-msg">Failed to load agents</p>'; return; }
-  const agents = d.agents || [];
-  el.innerHTML = agents.map(a => {
+  el.innerHTML = (d.agents || []).map(a => {
     const isRunning = a.running;
     const statusBadge = a.type === 'long-running'
       ? badge(isRunning ? 'running' : 'stopped')
       : badge(a.activity ? 'ok' : (a.cron?.last_run_status || 'never'));
-    const lastRun = a.activity?.last_seen_age || a.cron?.last_run_age || (a.log_file?.age_label ? a.log_file.age_label : '–');
+    const lastRun = a.activity?.last_seen_age || a.cron?.last_run_age || '–';
     const lastSummary = a.activity?.last_summary || '';
-    const logLines = a.log_file?.tail?.slice(-3).join('\n') || '';
-    const logHtml = logLines ? `<div class="log-tail">${logLines.replace(/</g,'&lt;')}</div>` : '';
     return `<div class="card">
       <div class="card-header">
         <span class="card-title">${dot(isRunning || a.type === 'cron')}${a.name}</span>
@@ -325,50 +396,51 @@ async function loadAgents() {
         ${a.pid ? `<span>PID: ${a.pid}</span>` : ''}
       </div>
       ${lastSummary ? `<div style="font-size:12px;color:var(--muted);margin-top:6px;font-style:italic">${lastSummary}</div>` : ''}
-      ${logHtml}
     </div>`;
   }).join('');
 }
 
+// ── Crons Page ────────────────────────────────────────────────────────────────
 async function loadCrons() {
-  const d = await fetchJSON('/crons');
   const tbody = document.getElementById('cron-body');
+  const d = await fetchJSON('/crons');
   if (!d) { tbody.innerHTML = '<tr><td colspan="5" class="error-msg">Failed to load</td></tr>'; return; }
-  const jobs = d.jobs || [];
-  tbody.innerHTML = jobs.map(j => `<tr>
+  tbody.innerHTML = (d.jobs || []).map(j => `<tr>
     <td><span class="cron-name">${j.name}</span><br><span class="cron-schedule">${j.schedule_expr} ${j.timezone}</span></td>
     <td>${j.last_run_age || '–'}</td>
     <td>${badge(j.last_run_status || 'never')}</td>
-    <td style="color:var(--muted);font-size:12px">${j.next_run_at ? new Date(j.next_run_at).toLocaleString('en-GB',{timeZone:'Asia/Dubai',hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short'}) : '–'}</td>
+    <td style="color:var(--muted);font-size:12px">${j.next_run_at ? fmtTime(j.next_run_at) : '–'}</td>
   </tr>`).join('');
 }
 
-async function loadAll() {
-  await Promise.all([loadStatus(), loadAgents(), loadCrons(), loadChroma(), loadContext()]);
+// ── Activity Full Page ────────────────────────────────────────────────────────
+let activityOffset = 0;
+const ACTIVITY_LIMIT = 20;
+
+async function loadActivityFull(append=false) {
+  const el = document.getElementById('activity-feed-full');
+  const pg = document.getElementById('activity-load-more');
+  if (!append) { activityOffset = 0; el.innerHTML = '<p class="loading">Loading...</p>'; pg.innerHTML = ''; }
+
+  const data = await fetchJSON(`/activity?limit=100`);
+  if (!data || !data.events?.length) { el.innerHTML = '<p class="loading">No activity logged yet.</p>'; return; }
+
+  const all = data.events;
+  const slice = all.slice(activityOffset, activityOffset + ACTIVITY_LIMIT);
+  const html = renderActivityItems(slice);
+
+  if (append) el.innerHTML += html;
+  else el.innerHTML = `<div style="font-size:12px;color:var(--muted);margin-bottom:12px">${all.length} events total</div>` + html;
+
+  activityOffset += slice.length;
+  if (activityOffset < all.length) {
+    pg.innerHTML = `<button onclick="loadActivityFull(true)" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:7px 20px;border-radius:6px;cursor:pointer;font-size:13px">Load more (${all.length - activityOffset} remaining)</button>`;
+  } else {
+    pg.innerHTML = '';
+  }
 }
 
-// ── Activity Feed ────────────────────────────────────────────────────────────
-async function loadActivity() {
-  const el = document.getElementById('activity-feed');
-  const data = await fetchJSON('/activity?limit=50');
-  if (!data || data.error) { el.innerHTML = `<p class="loading">No activity yet.</p>`; return; }
-  const events = data.events || [];
-  if (events.length === 0) { el.innerHTML = '<p class="loading">No activity logged yet — will populate after next agent run.</p>'; return; }
-  el.innerHTML = events.map(e => {
-    const d = new Date(e.ts);
-    const timeStr = d.toLocaleString('en-GB', {timeZone:'Asia/Dubai', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'});
-    return `<div class="activity-item">
-      <span class="activity-icon">${e.icon || '⚙️'}</span>
-      <div class="activity-body">
-        <div class="activity-agent">${e.agent}</div>
-        <div class="activity-summary">${e.summary}</div>
-        <div class="activity-time">${timeStr} Dubai</div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-// ── DB Explorer ──────────────────────────────────────────────────────────────
+// ── DB Explorer ───────────────────────────────────────────────────────────────
 let dbCurrentTab = 'tweets';
 let dbOffset = 0;
 const DB_LIMIT = 50;
@@ -379,14 +451,8 @@ function switchTab(tab) {
   ['tweets','articles','my_tweets'].forEach(t => {
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
   });
-  // Update search placeholder
   document.getElementById('db-search').placeholder = tab === 'articles' ? 'Search articles...' : 'Search tweets...';
-  // Default my_tweets and articles to all-time (not 7 days)
-  if (tab === 'my_tweets' || tab === 'articles') {
-    document.getElementById('db-days').value = '';
-  } else {
-    document.getElementById('db-days').value = '7';
-  }
+  document.getElementById('db-days').value = (tab === 'my_tweets' || tab === 'articles') ? '' : '7';
   loadDB();
 }
 
@@ -397,38 +463,28 @@ async function loadDB(append=false) {
   const sort = document.getElementById('db-sort').value;
   const el = document.getElementById('db-results');
   const pg = document.getElementById('db-pagination');
-
   if (!append) { dbOffset = 0; el.innerHTML = '<p class="loading">Loading...</p>'; pg.innerHTML = ''; }
 
   let data;
   if (q) {
-    // Semantic search
-    let url = `${API}/db/search?q=${encodeURIComponent(q)}&collection=${dbCurrentTab}&limit=${DB_LIMIT}`;
+    let url = `/db/search?q=${encodeURIComponent(q)}&collection=${dbCurrentTab}&limit=${DB_LIMIT}`;
     if (days) url += `&days=${days}`;
-    data = await fetchJSON(url.replace(API, ''));
+    data = await fetchJSON(url);
   } else {
-    // Browse
     let url = `/db/${dbCurrentTab}?limit=${DB_LIMIT}&offset=${dbOffset}&sort=${sort}`;
     if (handle) url += `&handle=${encodeURIComponent(handle)}`;
     if (days) url += `&days=${days}`;
     data = await fetchJSON(url);
   }
 
-  if (!data || data.error) {
-    el.innerHTML = `<p class="error-msg">${data?.error || 'Failed to load'}</p>`;
-    return;
-  }
-
+  if (!data || data.error) { el.innerHTML = `<p class="error-msg">${data?.error || 'Failed to load'}</p>`; return; }
   const items = data.items || [];
-  if (items.length === 0 && !append) {
-    el.innerHTML = '<p class="loading">No results found.</p>';
-    return;
-  }
+  if (!items.length && !append) { el.innerHTML = '<p class="loading">No results found.</p>'; return; }
 
   const rows = items.map((item, i) => {
     const rank = dbOffset + i + 1;
-    const text = item.text ? item.text.replace(/</g,'&lt;').substring(0, 280) : '';
-    const ellipsis = item.text && item.text.length > 280 ? '...' : '';
+    const text = (item.text || '').replace(/</g,'&lt;').substring(0, 280);
+    const ellipsis = (item.text || '').length > 280 ? '...' : '';
     const aiTag = item.ai_assisted ? '<span class="ai-badge">AI</span>' : '';
     const likesHtml = item.likes ? `<span class="tweet-likes">♥ ${item.likes.toLocaleString()}</span>` : '';
     const urlHtml = item.url ? `<a href="${item.url}" target="_blank">↗ Open</a>` : '';
@@ -443,13 +499,9 @@ async function loadDB(append=false) {
     </div>`;
   }).join('');
 
-  if (append) {
-    el.innerHTML += rows;
-  } else {
-    el.innerHTML = `<div style="font-size:12px;color:var(--muted);margin-bottom:10px">${data.total.toLocaleString()} results${q ? ` for "${q}"` : ''}</div>` + rows;
-  }
+  if (append) el.innerHTML += rows;
+  else el.innerHTML = `<div style="font-size:12px;color:var(--muted);margin-bottom:10px">${data.total.toLocaleString()} results${q ? ` for "${q}"` : ''}</div>` + rows;
 
-  // Pagination
   dbOffset += items.length;
   if (!q && dbOffset < (data.total || 0)) {
     pg.innerHTML = `<button onclick="loadDB(true)" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:7px 20px;border-radius:6px;cursor:pointer;font-size:13px">Load more (${data.total - dbOffset} remaining)</button>`;
@@ -458,13 +510,9 @@ async function loadDB(append=false) {
   }
 }
 
-// Load tweets tab by default on page load
-window.addEventListener('DOMContentLoaded', () => { setTimeout(() => switchTab('tweets'), 500); });
-
-loadAll();
-loadActivity();
-setInterval(loadAll, 30000);
-setInterval(loadActivity, 30000);
+// ── Auto-refresh home every 30s ───────────────────────────────────────────────
+loadHome();
+setInterval(() => { if (currentPage === 'home') loadHome(); }, 30000);
 </script>
 </body>
 </html>
