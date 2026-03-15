@@ -117,6 +117,13 @@
   .tweet-likes { font-weight: 600; color: var(--green); }
   .ai-badge { background: rgba(108,99,255,0.2); color: var(--accent); font-size: 10px; padding: 1px 6px; border-radius: 10px; }
 
+  /* Alert banner */
+  .alert-bar { display: flex; gap: 8px; flex-wrap: wrap; }
+  .alert-pill { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; }
+  .alert-pill.red { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+  .alert-pill.yellow { background: rgba(234,179,8,0.12); border: 1px solid rgba(234,179,8,0.3); color: #fde68a; }
+  .alert-pill.green { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); color: #86efac; }
+
   /* File viewer */
   .file-viewer { background: #0a0a0e; border: 1px solid var(--border); border-radius: 8px; padding: 20px 24px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12.5px; line-height: 1.7; color: #d1d5db; white-space: pre-wrap; word-break: break-word; max-height: 72vh; overflow-y: auto; }
   .file-viewer .fh1 { color: var(--accent); font-size: 15px; font-weight: 700; font-family: var(--font); display: block; margin: 16px 0 6px; }
@@ -160,6 +167,9 @@
 
 <!-- ═══════════════════════════════ HOME PAGE ═══════════════════════════════ -->
 <div class="page active" id="page-home">
+
+  <!-- Alert Banner -->
+  <div id="alert-banner" style="margin-bottom:16px;display:none"></div>
 
   <div id="status-bar">
     <div class="stat-pill"><span class="label">GuyBot</span><span id="s-guybot" class="value">–</span></div>
@@ -325,7 +335,57 @@ function fmtTime(iso) {
 
 // ── Home Page ────────────────────────────────────────────────────────────────
 async function loadHome() {
-  await Promise.all([loadStatus(), loadChroma(), loadContext(), loadActivityPreview()]);
+  await Promise.all([loadStatus(), loadChroma(), loadContext(), loadActivityPreview(), loadAlerts()]);
+}
+
+async function loadAlerts() {
+  const banner = document.getElementById('alert-banner');
+  const alerts = [];
+
+  // 1. GuyBot down
+  const status = await fetchJSON('/status');
+  if (status && !status.guybot_running) {
+    alerts.push({ level: 'red', icon: '🔴', msg: 'GuyBot is down' });
+  }
+
+  // 2. ChromaDB stale — tweets collection not updated in >25h
+  const chroma = await fetchJSON('/chroma');
+  if (chroma && chroma.collections) {
+    const tweets = chroma.collections['tweets'];
+    // Check via activity feed — look for last x_digest event
+    const activity = await fetchJSON('/activity?limit=100');
+    const digestEvent = activity?.events?.find(e => e.agent === 'x_digest');
+    if (digestEvent) {
+      const ageMs = Date.now() - new Date(digestEvent.ts).getTime();
+      const ageH = ageMs / 3600000;
+      if (ageH > 25) alerts.push({ level: 'red', icon: '🔴', msg: `ChromaDB stale — digest last ran ${Math.round(ageH)}h ago` });
+      else if (ageH > 20) alerts.push({ level: 'yellow', icon: '🟡', msg: `ChromaDB approaching stale — digest ${Math.round(ageH)}h ago` });
+    } else {
+      alerts.push({ level: 'yellow', icon: '🟡', msg: 'ChromaDB: no digest activity logged yet' });
+    }
+
+    // 3. Missed market context (>25h since last run)
+    const ctxEvent = activity?.events?.find(e => e.agent === 'market_context');
+    if (ctxEvent) {
+      const ageH = (Date.now() - new Date(ctxEvent.ts).getTime()) / 3600000;
+      if (ageH > 25) alerts.push({ level: 'red', icon: '🔴', msg: `Market context stale — last updated ${Math.round(ageH)}h ago` });
+    }
+
+    // 4. Check key crons via activity feed — coinbureau_performance
+    const cbEvent = activity?.events?.find(e => e.agent === 'coinbureau_performance');
+    if (cbEvent) {
+      const ageH = (Date.now() - new Date(cbEvent.ts).getTime()) / 3600000;
+      if (ageH > 30) alerts.push({ level: 'yellow', icon: '🟡', msg: `CB performance report: last ran ${Math.round(ageH)}h ago` });
+    }
+  }
+
+  if (alerts.length === 0) {
+    banner.style.display = 'block';
+    banner.innerHTML = `<div class="alert-bar"><div class="alert-pill green">✅ All systems healthy</div></div>`;
+  } else {
+    banner.style.display = 'block';
+    banner.innerHTML = `<div class="alert-bar">${alerts.map(a => `<div class="alert-pill ${a.level}">${a.icon} ${a.msg}</div>`).join('')}</div>`;
+  }
 }
 
 async function loadStatus() {
