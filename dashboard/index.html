@@ -75,6 +75,15 @@
   .freshness-name { font-weight: 500; }
   .freshness-age { font-size: 12px; color: var(--muted); }
 
+  /* Activity feed */
+  .activity-item { display: flex; gap: 12px; padding: 9px 0; border-bottom: 1px solid rgba(42,42,53,0.5); align-items: flex-start; }
+  .activity-item:last-child { border-bottom: none; }
+  .activity-icon { font-size: 16px; min-width: 22px; }
+  .activity-body { flex: 1; }
+  .activity-agent { font-size: 11px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px; }
+  .activity-summary { font-size: 13px; color: var(--text); margin: 2px 0; }
+  .activity-time { font-size: 11px; color: var(--muted); }
+
   /* Tab buttons */
   .tab-btn { background: var(--surface); border: 1px solid var(--border); color: var(--muted); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 500; }
   .tab-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(108,99,255,0.1); }
@@ -142,6 +151,14 @@
         </tr></thead>
         <tbody id="cron-body"><tr><td colspan="5" class="loading">Loading...</td></tr></tbody>
       </table>
+    </div>
+  </section>
+
+  <!-- Activity Feed -->
+  <section>
+    <h2>Agent Activity Feed</h2>
+    <div class="card" id="activity-feed" style="max-height:320px;overflow-y:auto">
+      <p class="loading">Loading activity...</p>
     </div>
   </section>
 
@@ -328,6 +345,27 @@ async function loadAll() {
   await Promise.all([loadStatus(), loadAgents(), loadCrons(), loadChroma(), loadContext()]);
 }
 
+// ── Activity Feed ────────────────────────────────────────────────────────────
+async function loadActivity() {
+  const el = document.getElementById('activity-feed');
+  const data = await fetchJSON('/activity?limit=50');
+  if (!data || data.error) { el.innerHTML = `<p class="loading">No activity yet.</p>`; return; }
+  const events = data.events || [];
+  if (events.length === 0) { el.innerHTML = '<p class="loading">No activity logged yet — will populate after next agent run.</p>'; return; }
+  el.innerHTML = events.map(e => {
+    const d = new Date(e.ts);
+    const timeStr = d.toLocaleString('en-GB', {timeZone:'Asia/Dubai', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'});
+    return `<div class="activity-item">
+      <span class="activity-icon">${e.icon || '⚙️'}</span>
+      <div class="activity-body">
+        <div class="activity-agent">${e.agent}</div>
+        <div class="activity-summary">${e.summary}</div>
+        <div class="activity-time">${timeStr} Dubai</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 // ── DB Explorer ──────────────────────────────────────────────────────────────
 let dbCurrentTab = 'tweets';
 let dbOffset = 0;
@@ -422,7 +460,9 @@ async function loadDB(append=false) {
 window.addEventListener('DOMContentLoaded', () => { setTimeout(() => switchTab('tweets'), 500); });
 
 loadAll();
+loadActivity();
 setInterval(loadAll, 30000);
+setInterval(loadActivity, 30000);
 </script>
 </body>
 </html>

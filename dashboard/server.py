@@ -401,6 +401,24 @@ def get_context() -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Endpoint: /activity — agent activity feed
+# ---------------------------------------------------------------------------
+
+ACTIVITY_FEED_FILE = WORKSPACE_DIR / "activity_feed.json"
+
+@app.get("/activity")
+def get_activity(limit: int = 50) -> dict:
+    """Return recent agent activity events."""
+    if not ACTIVITY_FEED_FILE.exists():
+        return {"events": [], "total": 0}
+    try:
+        events = json.loads(ACTIVITY_FEED_FILE.read_text())
+        return {"events": events[:limit], "total": len(events)}
+    except Exception as exc:
+        return {"error": str(exc), "events": [], "total": 0}
+
+
+# ---------------------------------------------------------------------------
 # Endpoint: /db/{collection}  — browse ChromaDB entries
 # ---------------------------------------------------------------------------
 
