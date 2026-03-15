@@ -117,6 +117,14 @@
   .tweet-likes { font-weight: 600; color: var(--green); }
   .ai-badge { background: rgba(108,99,255,0.2); color: var(--accent); font-size: 10px; padding: 1px 6px; border-radius: 10px; }
 
+  /* File viewer */
+  .file-viewer { background: #0a0a0e; border: 1px solid var(--border); border-radius: 8px; padding: 20px 24px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12.5px; line-height: 1.7; color: #d1d5db; white-space: pre-wrap; word-break: break-word; max-height: 72vh; overflow-y: auto; }
+  .file-viewer .fh1 { color: var(--accent); font-size: 15px; font-weight: 700; font-family: var(--font); display: block; margin: 16px 0 6px; }
+  .file-viewer .fh2 { color: #a5b4fc; font-size: 13px; font-weight: 600; font-family: var(--font); display: block; margin: 12px 0 4px; }
+  .file-viewer .fh3 { color: #c4b5fd; font-size: 12px; font-weight: 600; font-family: var(--font); display: block; margin: 8px 0 2px; }
+  .file-viewer .fbold { color: var(--text); font-weight: 700; }
+  .file-viewer .furl { color: var(--accent); }
+
   /* Loading/error */
   .loading { color: var(--muted); font-size: 13px; padding: 20px 0; }
   .error-msg { color: var(--red); font-size: 12px; padding: 8px 0; }
@@ -141,6 +149,7 @@
       <button class="nav-btn" onclick="navigate('crons')" id="nav-crons">Cron Jobs</button>
       <button class="nav-btn" onclick="navigate('activity')" id="nav-activity">Activity</button>
       <button class="nav-btn" onclick="navigate('db')" id="nav-db">Database</button>
+      <button class="nav-btn" onclick="navigate('files')" id="nav-files">Files</button>
     </nav>
   </div>
   <div class="header-right">
@@ -211,6 +220,21 @@
   <div id="activity-load-more" style="margin-top:12px;text-align:center"></div>
 </div>
 
+<!-- ════════════════════════════════ FILES PAGE ═════════════════════════════ -->
+<div class="page" id="page-files">
+  <div class="page-title">File Viewer</div>
+  <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+    <button class="tab-btn active" onclick="loadFile('current.md')" id="ftab-current.md">📰 current.md</button>
+    <button class="tab-btn" onclick="loadFile('weekly_context.md')" id="ftab-weekly_context.md">📅 weekly_context.md</button>
+    <button class="tab-btn" onclick="loadFile('latest_digest.txt')" id="ftab-latest_digest.txt">📡 latest_digest.txt</button>
+    <button class="tab-btn" onclick="loadFile('humor_digest.txt')" id="ftab-humor_digest.txt">😂 humor_digest.txt</button>
+  </div>
+  <div class="card">
+    <div id="file-meta" style="font-size:12px;color:var(--muted);margin-bottom:12px;display:flex;gap:16px"></div>
+    <div id="file-content" class="file-viewer"><p class="loading">Select a file above...</p></div>
+  </div>
+</div>
+
 <!-- ══════════════════════════════ DATABASE PAGE ════════════════════════════ -->
 <div class="page" id="page-db">
   <div class="page-title">Database Explorer</div>
@@ -245,7 +269,7 @@
 const API = '';  // same origin
 
 // ── Router ───────────────────────────────────────────────────────────────────
-const PAGES = ['home','agents','crons','activity','db'];
+const PAGES = ['home','agents','crons','activity','db','files'];
 let currentPage = 'home';
 
 function navigate(page) {
@@ -260,6 +284,7 @@ function navigate(page) {
   if (page === 'crons') loadCrons();
   if (page === 'activity') loadActivityFull();
   if (page === 'db') { setTimeout(() => switchTab('tweets'), 100); }
+  if (page === 'files') loadFile('current.md');
 }
 
 function refreshCurrent() {
@@ -508,6 +533,48 @@ async function loadDB(append=false) {
   } else {
     pg.innerHTML = '';
   }
+}
+
+// ── File Viewer ───────────────────────────────────────────────────────────────
+const FILE_TABS = ['current.md','weekly_context.md','latest_digest.txt','humor_digest.txt'];
+let currentFile = 'current.md';
+
+async function loadFile(name) {
+  currentFile = name;
+  FILE_TABS.forEach(t => {
+    const el = document.getElementById('ftab-' + t);
+    if (el) el.classList.toggle('active', t === name);
+  });
+  const content_el = document.getElementById('file-content');
+  const meta_el = document.getElementById('file-meta');
+  content_el.innerHTML = '<p class="loading">Loading...</p>';
+  meta_el.innerHTML = '';
+
+  const data = await fetchJSON('/file/' + encodeURIComponent(name));
+  if (!data || data.error) {
+    content_el.innerHTML = `<p class="error-msg">${data?.error || 'Failed to load'}</p>`;
+    return;
+  }
+
+  meta_el.innerHTML = `<span>📄 ${name}</span><span>Age: ${data.age_label || '–'}</span><span>${data.size_bytes ? (data.size_bytes / 1024).toFixed(1) + ' KB' : ''}</span>`;
+
+  // Light markdown render
+  const rendered = renderMarkdown(data.content || '');
+  content_el.innerHTML = rendered;
+}
+
+function renderMarkdown(text) {
+  // Escape HTML first
+  let s = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // Headers
+  s = s.replace(/^### (.+)$/gm, '<span class="fh3">$1</span>');
+  s = s.replace(/^## (.+)$/gm, '<span class="fh2">$1</span>');
+  s = s.replace(/^# (.+)$/gm, '<span class="fh1">$1</span>');
+  // Bold
+  s = s.replace(/\*\*(.+?)\*\*/g, '<span class="fbold">$1</span>');
+  // URLs (make clickable)
+  s = s.replace(/(https?:\/\/[^\s\)]+)/g, '<a class="furl" href="$1" target="_blank">$1</a>');
+  return s;
 }
 
 // ── Auto-refresh home every 30s ───────────────────────────────────────────────

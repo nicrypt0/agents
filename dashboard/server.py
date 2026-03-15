@@ -432,6 +432,33 @@ def get_context() -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Endpoint: /file/{name} — read a context file
+# ---------------------------------------------------------------------------
+
+ALLOWED_FILES = {
+    "current.md": MARKET_CONTEXT_DIR / "current.md",
+    "weekly_context.md": MARKET_CONTEXT_DIR / "weekly_context.md",
+    "latest_digest.txt": WORKSPACE_DIR / "latest_digest.txt",
+    "humor_digest.txt": WORKSPACE_DIR / "humor_digest.txt",
+}
+
+@app.get("/file/{name}")
+def read_file(name: str) -> dict:
+    """Return contents of an allowed context file."""
+    path = ALLOWED_FILES.get(name)
+    if not path:
+        return {"error": f"File '{name}' not allowed", "content": None}
+    if not path.exists():
+        return {"error": f"File not found", "content": None, "name": name}
+    try:
+        content = path.read_text(encoding="utf-8")
+        info = _file_info(path)
+        return {"name": name, "content": content, "age_label": info.get("age_label"), "size_bytes": info.get("size_bytes")}
+    except Exception as exc:
+        return {"error": str(exc), "content": None}
+
+
+# ---------------------------------------------------------------------------
 # Endpoint: /activity — agent activity feed
 # ---------------------------------------------------------------------------
 
