@@ -467,7 +467,7 @@ ACTIVITY_FEED_FILE = WORKSPACE_DIR / "activity_feed.json"
 @app.get("/team-agents")
 def get_team_agents(days: int = 7) -> dict:
     """Return team agent activity log for S-Tier X Agent and GuyBot."""
-    log_file = WORKSPACE / "team_agents_log.json"
+    log_file = WORKSPACE_DIR / "team_agents_log.json"
     if not log_file.exists():
         return {"cbtweet": [], "guybot": [], "stats": {}}
     try:
