@@ -464,6 +464,44 @@ def read_file(name: str) -> dict:
 
 ACTIVITY_FEED_FILE = WORKSPACE_DIR / "activity_feed.json"
 
+@app.get("/team-agents")
+def get_team_agents(days: int = 7) -> dict:
+    """Return team agent activity log for S-Tier X Agent and GuyBot."""
+    log_file = WORKSPACE / "team_agents_log.json"
+    if not log_file.exists():
+        return {"cbtweet": [], "guybot": [], "stats": {}}
+    try:
+        import time as _time
+        log = json.loads(log_file.read_text())
+        cutoff = _time.time() - days * 86400
+        log = [e for e in log if e.get("ts", 0) >= cutoff]
+
+        cbtweet = [e for e in log if e.get("bot") == "cbtweet"]
+        guybot = [e for e in log if e.get("bot") == "guybot"]
+
+        # Stats
+        today_cutoff = _time.time() - 86400
+        stats = {
+            "cbtweet": {
+                "total": len(cbtweet),
+                "today": sum(1 for e in cbtweet if e.get("ts", 0) >= today_cutoff),
+                "last_active": cbtweet[-1]["ts_iso"] if cbtweet else None,
+            },
+            "guybot": {
+                "total": len(guybot),
+                "today": sum(1 for e in guybot if e.get("ts", 0) >= today_cutoff),
+                "last_active": guybot[-1]["ts_iso"] if guybot else None,
+            },
+        }
+        return {
+            "cbtweet": list(reversed(cbtweet[-20:])),
+            "guybot": list(reversed(guybot[-20:])),
+            "stats": stats,
+        }
+    except Exception as exc:
+        return {"error": str(exc), "cbtweet": [], "guybot": []}
+
+
 @app.get("/activity")
 def get_activity(limit: int = 50) -> dict:
     """Return recent agent activity events."""

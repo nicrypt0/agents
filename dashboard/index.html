@@ -157,6 +157,7 @@
       <button class="nav-btn" onclick="navigate('activity')" id="nav-activity">Activity</button>
       <button class="nav-btn" onclick="navigate('db')" id="nav-db">Database</button>
       <button class="nav-btn" onclick="navigate('files')" id="nav-files">Files</button>
+      <button class="nav-btn" onclick="navigate('team')" id="nav-team">Team Agents</button>
     </nav>
   </div>
   <div class="header-right">
@@ -245,6 +246,43 @@
   </div>
 </div>
 
+<!-- ══════════════════════════════ TEAM AGENTS PAGE ════════════════════════ -->
+<div class="page" id="page-team">
+  <div class="page-title">Team Agents</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px" id="team-grid">
+    <!-- S-Tier X Agent column -->
+    <div>
+      <div class="card" style="margin-bottom:16px">
+        <h2 style="margin:0 0 12px">🐦 S-Tier X Agent</h2>
+        <div id="cbtweet-stats" style="display:flex;gap:24px;margin-bottom:8px">
+          <div><div style="font-size:22px;font-weight:700" id="cbtweet-today">—</div><div style="font-size:11px;color:var(--muted)">Today</div></div>
+          <div><div style="font-size:22px;font-weight:700" id="cbtweet-week">—</div><div style="font-size:11px;color:var(--muted)">This week</div></div>
+          <div><div style="font-size:12px;color:var(--muted);margin-top:4px" id="cbtweet-last"></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="margin:0 0 12px;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Recent Activity</h3>
+        <div id="cbtweet-log"><p class="loading">Loading...</p></div>
+      </div>
+    </div>
+    <!-- GuyBot column -->
+    <div>
+      <div class="card" style="margin-bottom:16px">
+        <h2 style="margin:0 0 12px">🤖 GuyBot</h2>
+        <div id="guybot-stats" style="display:flex;gap:24px;margin-bottom:8px">
+          <div><div style="font-size:22px;font-weight:700" id="guybot-today">—</div><div style="font-size:11px;color:var(--muted)">Today</div></div>
+          <div><div style="font-size:22px;font-weight:700" id="guybot-week">—</div><div style="font-size:11px;color:var(--muted)">This week</div></div>
+          <div><div style="font-size:12px;color:var(--muted);margin-top:4px" id="guybot-last"></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="margin:0 0 12px;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Recent Activity</h3>
+        <div id="guybot-log"><p class="loading">Loading...</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════════════════════ DATABASE PAGE ════════════════════════════ -->
 <div class="page" id="page-db">
   <div class="page-title">Database Explorer</div>
@@ -309,7 +347,7 @@
 const API = '';  // same origin
 
 // ── Router ───────────────────────────────────────────────────────────────────
-const PAGES = ['home','agents','crons','activity','db','files'];
+const PAGES = ['home','agents','crons','activity','db','files','team'];
 let currentPage = 'home';
 
 function navigate(page) {
@@ -325,6 +363,7 @@ function navigate(page) {
   if (page === 'activity') loadActivityFull();
   if (page === 'db') { setTimeout(() => switchTab('tweets'), 100); }
   if (page === 'files') loadFile('current.md');
+  if (page === 'team') loadTeamAgents();
 }
 
 function refreshCurrent() {
@@ -526,6 +565,49 @@ async function loadCrons() {
     <td>${badge(j.last_run_status || 'never')}</td>
     <td style="color:var(--muted);font-size:12px">${j.next_run_at ? fmtTime(j.next_run_at) : '–'}</td>
   </tr>`).join('');
+}
+
+// ── Team Agents Page ──────────────────────────────────────────────────────────
+async function loadTeamAgents() {
+  try {
+    const data = await fetchJSON('/team-agents?days=7');
+    if (data.error) { document.getElementById('cbtweet-log').innerHTML = `<p style="color:var(--danger)">${data.error}</p>`; return; }
+
+    const s = data.stats || {};
+
+    // S-Tier X Agent stats
+    const cs = s.cbtweet || {};
+    document.getElementById('cbtweet-today').textContent = cs.today ?? 0;
+    document.getElementById('cbtweet-week').textContent = cs.total ?? 0;
+    document.getElementById('cbtweet-last').textContent = cs.last_active ? 'Last: ' + new Date(cs.last_active).toLocaleString() : 'No activity yet';
+
+    // GuyBot stats
+    const gs = s.guybot || {};
+    document.getElementById('guybot-today').textContent = gs.today ?? 0;
+    document.getElementById('guybot-week').textContent = gs.total ?? 0;
+    document.getElementById('guybot-last').textContent = gs.last_active ? 'Last: ' + new Date(gs.last_active).toLocaleString() : 'No activity yet';
+
+    // Render log entries
+    function renderLog(entries, elId) {
+      const el = document.getElementById(elId);
+      if (!entries || entries.length === 0) { el.innerHTML = '<p style="color:var(--muted);font-size:13px">No activity yet.</p>'; return; }
+      el.innerHTML = entries.map(e => `
+        <div style="padding:10px 0;border-bottom:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span style="font-size:12px;font-weight:600;color:var(--accent)">${e.user_name || e.user_id}</span>
+            <span style="font-size:11px;color:var(--muted)">${new Date(e.ts * 1000).toLocaleString()}</span>
+          </div>
+          <div style="font-size:13px;color:var(--text)">${e.topic}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${e.status}</div>
+        </div>
+      `).join('');
+    }
+
+    renderLog(data.cbtweet, 'cbtweet-log');
+    renderLog(data.guybot, 'guybot-log');
+  } catch(e) {
+    document.getElementById('cbtweet-log').innerHTML = `<p style="color:var(--danger)">Failed to load: ${e.message}</p>`;
+  }
 }
 
 // ── Activity Full Page ────────────────────────────────────────────────────────
